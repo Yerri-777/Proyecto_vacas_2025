@@ -1,0 +1,51 @@
+/*
+!.gitignore
+!scripts/
+
+# permitir estructura hasta el package
+!backend/
+!backend/src/
+!backend/src/main/
+!backend/src/main/java/
+!backend/src/main/java/com/
+!backend/src/main/java/com/example/
+!backend/src/main/java/com/example/backend/
+
+# permitir solo estos paquetes y su contenido
+!backend/src/main/java/com/example/backend/models/
+!backend/src/main/java/com/example/backend/models/**
+!backend/src/main/java/com/example/backend/dao/
+!backend/src/main/java/com/example/backend/dao/**
+!backend/src/main/java/com/example/backend/enums/
+!backend/src/main/java/com/example/backend/enums/**
+
+# permitir script de ayuda
+!scripts/git_add_selected.sh
+
+# opcional: permitir sql inicial
+!db/
+!db/**
+/*
+!.gitignore
+!scripts/
+
+# permitir estructura hasta el package
+!backend/
+!backend/src/
+!backend/src/main/
+!backend/src/main/java/
+!backend/src/main/java/com/
+!backend/src/main/java/com/example/
+!backend/src/main/java/com/example/backend/
+
+# permitir solo estos paquetes y su contenido
+!backend/src/main/java/com/example/backend/models/
+!backend/src/main/java/com/example/backend/models/**
+!backend/src/main/java/com/example/backend/dao/
+!backend/src/main/java/com/example/backend/dao/**
+!backend/src/main/java/com/example/backend/enums/
+!backend/src/main/java/com/example/backend/enums/**
+
+# opcionales: permitir sql inicial
+!db/
+!db/**
