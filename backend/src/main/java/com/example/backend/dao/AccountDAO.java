@@ -6,13 +6,15 @@ import com.example.backend.enums.Role;
 import com.example.backend.enums.EstadoCuenta;
 
 import java.sql.*;
+import org.mindrot.jbcrypt.BCrypt;
 
 public class AccountDAO {
     public int create(Account a) throws SQLException {
         String sql = "INSERT INTO Usuario(correo,password,role,estado) VALUES(?,?,?,?)";
         try (Connection c = DBConnection.getConnection(); PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, a.getCorreo());
-            ps.setString(2, a.getPassword());
+            String hashed = a.getPassword() != null ? BCrypt.hashpw(a.getPassword(), BCrypt.gensalt(12)) : null;
+            ps.setString(2, hashed);
             ps.setString(3, a.getRol() != null ? a.getRol().name() : Role.USUARIO.name());
             ps.setString(4, a.getEstado() != null ? a.getEstado().name() : EstadoCuenta.ACTIVA.name());
             ps.executeUpdate();
@@ -61,7 +63,10 @@ public class AccountDAO {
     public boolean update(Account a) throws SQLException {
         String sql = "UPDATE Usuario SET correo=?, password=?, role=?, estado=? WHERE id=?";
         try (Connection c = DBConnection.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setString(1, a.getCorreo()); ps.setString(2, a.getPassword()); ps.setString(3, a.getRol().name()); ps.setString(4, a.getEstado().name()); ps.setInt(5, a.getId());
+            ps.setString(1, a.getCorreo());
+            String hashed = a.getPassword() != null ? BCrypt.hashpw(a.getPassword(), BCrypt.gensalt(12)) : null;
+            ps.setString(2, hashed);
+            ps.setString(3, a.getRol().name()); ps.setString(4, a.getEstado().name()); ps.setInt(5, a.getId());
             return ps.executeUpdate() > 0;
         }
     }

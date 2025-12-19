@@ -9,6 +9,15 @@ import java.util.*;
 
 public class VideojuegoDAO {
     public int create(Videojuego v) throws SQLException {
+        // validar empresa existe
+        String check = "SELECT 1 FROM Empresa WHERE id = ?";
+        try (Connection c = DBConnection.getConnection(); PreparedStatement p = c.prepareStatement(check)) {
+            p.setInt(1, v.getEmpresaId());
+            try (ResultSet rs = p.executeQuery()) {
+                if (!rs.next()) throw new SQLException("Empresa no existe");
+            }
+        }
+
         String sql = "INSERT INTO Videojuego(nombre,descripcion,empresa_id,precio,estado) VALUES(?,?,?,?,?)";
         try (Connection c = DBConnection.getConnection(); PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, v.getNombre()); ps.setString(2, v.getDescripcion()); ps.setInt(3, v.getEmpresaId()); ps.setDouble(4, v.getPrecio()); ps.setString(5, v.getEstado().name());

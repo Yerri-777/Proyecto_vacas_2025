@@ -6,6 +6,7 @@ import com.example.backend.enums.Role;
 import com.example.backend.enums.EstadoCuenta;
 
 import java.sql.*;
+import org.mindrot.jbcrypt.BCrypt;
 
 public class UsuarioDAO {
     public int create(Usuario u) throws SQLException {
@@ -13,7 +14,9 @@ public class UsuarioDAO {
         try (Connection c = DBConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, u.getCorreo());
-            ps.setString(2, u.getPassword());
+            // Hash password before storing
+            String hashed = u.getPassword() != null ? BCrypt.hashpw(u.getPassword(), BCrypt.gensalt(12)) : null;
+            ps.setString(2, hashed);
             ps.setString(3, u.getRole().name());
             ps.setString(4, u.getEstado().name());
             ps.executeUpdate();

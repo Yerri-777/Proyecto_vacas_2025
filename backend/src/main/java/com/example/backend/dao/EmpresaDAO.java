@@ -50,4 +50,12 @@ public class EmpresaDAO {
         String sql = "DELETE FROM Empresa WHERE id=?";
         try (Connection c = DBConnection.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) { ps.setInt(1, id); return ps.executeUpdate() > 0; }
     }
+
+    public boolean hasVideojuegos(int empresaId) throws SQLException {
+        String sql = "SELECT 1 FROM Videojuego WHERE empresa_id = ? LIMIT 1";
+        try (Connection c = DBConnection.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, empresaId);
+            try (ResultSet rs = ps.executeQuery()) { return rs.next(); }
+        }
+    }
 }

@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard - Backend Tienda</title>
+  <style>
+    body{font-family:Segoe UI,Arial;margin:24px;background:#f7f7f9;color:#222}
+    h1{color:#0b63b6}
+    .card{background:white;padding:16px;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:12px}
+    button{background:#0b63b6;color:white;border:0;padding:8px 12px;border-radius:6px;cursor:pointer}
+    pre{background:#f2f2f4;padding:12px;border-radius:6px;overflow:auto}
+    label{display:block;margin-top:8px}
+    input{padding:6px;width:100%;box-sizing:border-box}
+  </style>
+</head>
+<body>
+  <h1>Dashboard - Backend (pruebas rápidas)</h1>
+
+  <div class="card">
+    <strong>Servlets mapeados</strong>
+    <ul>
+      <li>/api/empresa (GET, POST, PUT, DELETE)</li>
+      <li>/api/videojuego (GET with empresaId, POST, PUT, DELETE)</li>
+      <li>/api/auth (POST)</li>
+      <li>/api/banner, /api/comentario, /api/compra, /api/report/sales, /api/upload, etc.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <strong>Listar empresas</strong>
+    <div style="margin-top:8px">
+      <button onclick="callApi('/api/empresa')">Obtener empresas (GET /api/empresa)</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <strong>Listar videojuegos por empresa</strong>
+    <label>empresaId:</label>
+    <input id="empresaId" value="1" />
+    <div style="margin-top:8px">
+      <button onclick="getVideojuegos()">Listar videojuegos</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <strong>Crear empresa (POST /api/empresa)</strong>
+    <label>Nombre</label>
+    <input id="empresa_nombre" />
+    <label>Correo</label>
+    <input id="empresa_correo" />
+    <label>Teléfono</label>
+    <input id="empresa_telefono" />
+    <div style="margin-top:8px">
+      <button onclick="createEmpresa()">Crear empresa</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <strong>Crear usuario / login</strong>
+    <label>Correo</label>
+    <input id="user_correo" />
+    <label>Contraseña</label>
+    <input id="user_password" type="password" />
+    <div style="margin-top:8px">
+      <button onclick="createAccount()">Crear cuenta (POST /api/account)</button>
+      <button onclick="login()" style="margin-left:8px">Login (POST /api/auth)</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <strong>Respuesta</strong>
+    <pre id="out">(esperando acciones...)</pre>
+  </div>
+
+  <script>
+    function show(obj){
+      const el = document.getElementById('out');
+      if(typeof obj === 'string') el.textContent = obj;
+      else el.textContent = JSON.stringify(obj, null, 2);
+    }
+
+    async function callApi(path, options){
+      try{
+        show('cargando ' + path + ' ...');
+        const res = await fetch(path, options);
+        const text = await res.text();
+        try{ const json = JSON.parse(text); show({status: res.status, body: json}); }
+        catch(e){ show({status: res.status, body: text}); }
+      }catch(e){ show('Error: ' + e.message); }
+    }
+
+    function getVideojuegos(){
+      const id = document.getElementById('empresaId').value;
+      if(!id){ show('Proporciona empresaId'); return; }
+      callApi('/api/videojuego?empresaId=' + encodeURIComponent(id));
+    }
+
+    function createEmpresa(){
+      const nombre = document.getElementById('empresa_nombre').value;
+      const correo = document.getElementById('empresa_correo').value;
+      const telefono = document.getElementById('empresa_telefono').value;
+      if(!nombre || !correo){ show('Nombre y correo requeridos'); return; }
+      const body = { nombre, correo, telefono };
+      callApi('/api/empresa', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    }
+
+    async function createAccount(){
+      const correo = document.getElementById('user_correo').value;
+      const password = document.getElementById('user_password').value;
+      if(!correo || !password){ show('correo y password requeridos'); return; }
+      callApi('/api/account', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ correo, password }) });
+    }
+
+    async function login(){
+      const correo = document.getElementById('user_correo').value;
+      const password = document.getElementById('user_password').value;
+      if(!correo || !password){ show('correo y password requeridos'); return; }
+      callApi('/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ correo, password }) });
+    }
+  </script>
+</body>
+</html>

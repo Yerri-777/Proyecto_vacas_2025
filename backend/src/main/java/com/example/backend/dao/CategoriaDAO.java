@@ -54,4 +54,25 @@ public class CategoriaDAO {
         }
         return list;
     }
+    public boolean isInUse(int categoriaId) throws SQLException {
+        // Primero intenta tabla de relación Videojuego_Categoria
+        String sqlRel = "SELECT 1 FROM Videojuego_Categoria WHERE categoria_id = ? LIMIT 1";
+        try (Connection c = DBConnection.getConnection(); PreparedStatement ps = c.prepareStatement(sqlRel)) {
+            ps.setInt(1, categoriaId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return true;
+            }
+        } catch (SQLException ex) {
+            // si la tabla no existe, intenta columna categoria_id en Videojuego
+            String sqlCol = "SELECT 1 FROM Videojuego WHERE categoria_id = ? LIMIT 1";
+            try (Connection c2 = DBConnection.getConnection(); PreparedStatement ps2 = c2.prepareStatement(sqlCol)) {
+                ps2.setInt(1, categoriaId);
+                try (ResultSet rs2 = ps2.executeQuery()) { return rs2.next(); }
+            } catch (SQLException ex2) {
+                // ninguna relación encontrada o tablas no existentes -> asumir no en uso
+                return false;
+            }
+        }
+        return false;
+    }
 }
