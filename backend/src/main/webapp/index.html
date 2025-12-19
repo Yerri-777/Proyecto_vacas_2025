@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Tienda - Inicio</title>
+    <style>
+      body{font-family:Arial,Helvetica,sans-serif;margin:0;background:#f5f7fb;color:#222}
+      header{background:#0b5cff;color:#fff;padding:18px 24px}
+      .container{max-width:980px;margin:24px auto;padding:16px}
+      .card{background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.06);padding:18px;margin-bottom:16px}
+      .row{display:flex;gap:16px}
+      .col{flex:1}
+      label{display:block;margin-bottom:6px;font-weight:600}
+      input{width:100%;padding:8px;border:1px solid #d7dbe6;border-radius:4px}
+      button{background:#0b5cff;color:#fff;border:none;padding:10px 14px;border-radius:6px;cursor:pointer}
+      pre{background:#0f1724;color:#e6eef8;padding:12px;border-radius:6px;overflow:auto}
+      nav a{color:#fff;margin-right:12px;text-decoration:none}
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1 style="margin:0;font-size:20px">Tienda - Panel de pruebas</h1>
+        <nav style="margin-top:8px">
+          <a href="browser/app-basic.html">App básico</a>
+          <a href="browser/index.html?full=true">SPA (full)</a>
+          <a href="backend-dashboard.html">Dashboard</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="card">
+        <h2>Login</h2>
+        <div class="row">
+          <div class="col" style="max-width:420px">
+            <label for="correo">Correo</label>
+            <input id="correo" type="email" placeholder="usuario@ejemplo.com" />
+            <label for="password" style="margin-top:10px">Contraseña</label>
+            <input id="password" type="password" placeholder="contraseña" />
+            <div style="margin-top:12px">
+              <button id="btnLogin">Iniciar sesión</button>
+            </div>
+          </div>
+            <div class="col" style="max-width:420px">
+              <h3>Registro</h3>
+              <label for="regCorreo">Correo</label>
+              <input id="regCorreo" type="email" placeholder="nuevo@ejemplo.com" />
+              <label for="regPassword" style="margin-top:10px">Contraseña</label>
+              <input id="regPassword" type="password" placeholder="contraseña" />
+              <label for="regRole" style="margin-top:10px">Tipo</label>
+              <select id="regRole"><option value="USUARIO">Usuario</option><option value="EMPRESA">Empresa</option></select>
+              <div style="margin-top:12px">
+                <button id="btnRegister">Crear cuenta</button>
+              </div>
+            </div>
+          <div class="col">
+            <label>Respuesta del servidor</label>
+            <pre id="loginResult">—</pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Verificaciones rápidas</h2>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <button id="btnHealth">Comprobar /api/health</button>
+          <button id="btnEmpresas">Listar /api/empresa</button>
+          <button id="btnClear">Limpiar</button>
+        </div>
+        <label>Salida</label>
+        <pre id="output">—</pre>
+      </section>
+    </main>
+
+    <script>
+      // Detectar contexto (compatible si la app no está en /tienda-backend)
+      const pathParts = location.pathname.split('/').filter(Boolean);
+      const ctx = pathParts.length>0 ? '/' + pathParts[0] : '/tienda-backend';
+      const API_BASE = location.origin + ctx + '/api';
+
+      function show(elId, obj){
+        document.getElementById(elId).textContent = typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2);
+      }
+
+      async function postJson(url, body){
+        const res = await fetch(url, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify(body),
+          credentials:'include'
+        });
+        const txt = await res.text();
+        try { return {status:res.status, body: JSON.parse(txt)} } catch(e){ return {status:res.status, body:txt} }
+      }
+
+      document.getElementById('btnLogin').addEventListener('click', async ()=>{
+        const correo = document.getElementById('correo').value.trim();
+        const password = document.getElementById('password').value;
+        if(!correo || !password){ show('loginResult','Correo y contraseña requeridos'); return; }
+        show('loginResult','Enviando...');
+        try{
+          const r = await postJson(API_BASE + '/auth', {correo,password});
+          show('loginResult', r);
+          if(r.status===200 && r.body && r.body.id){
+            show('output','Login OK — userId=' + r.body.id);
+          }
+        }catch(e){ show('loginResult','Error: '+ e.message); }
+      });
+
+      // Registro de cuenta
+      document.getElementById('btnRegister').addEventListener('click', async ()=>{
+        const correo = document.getElementById('regCorreo').value.trim();
+        const password = document.getElementById('regPassword').value;
+        const role = document.getElementById('regRole').value || 'USUARIO';
+        if(!correo || !password){ show('loginResult','Correo y contraseña requeridos para registro'); return; }
+        show('loginResult','Creando cuenta...');
+        try{
+          const res = await fetch(API_BASE + '/account', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ correo, password, rol: role }), credentials:'include'
+          });
+          const txt = await res.text();
+          let body;
+          try{ body = JSON.parse(txt); }catch(e){ body = txt; }
+          if(res.status===200 || res.status===201){ show('loginResult', {status:res.status, body}); show('output','Cuenta creada id=' + (body.id||'?')); }
+          else { show('loginResult', {status:res.status, body}); }
+        }catch(e){ show('loginResult','Error: '+e.message); }
+      });
+
+      document.getElementById('btnHealth').addEventListener('click', async ()=>{
+        show('output','Cargando...');
+        try{
+          const r = await fetch(API_BASE + '/health');
+          const j = await r.json();
+          show('output', {status:r.status, body:j});
+        }catch(e){ show('output','Error: '+e.message); }
+      });
+
+      document.getElementById('btnEmpresas').addEventListener('click', async ()=>{
+        show('output','Cargando empresas...');
+        try{
+          const r = await fetch(API_BASE + '/empresa');
+          const j = await r.json();
+          show('output', {status:r.status, body:j});
+        }catch(e){ show('output','Error: '+e.message); }
+      });
+
+      document.getElementById('btnClear').addEventListener('click', ()=>{ show('output','—'); show('loginResult','—'); });
+    </script>
+  </body>
+</html>
